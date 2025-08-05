@@ -38,7 +38,7 @@ card_data = [
   { question: "How do you create an array in Ruby?",
     answer: "Use square brackets: [1, 2, 3] or Array.new", deck: 0, tags: [1, 29], },
   { question: "What is string interpolation in Ruby?",
-    answer: "Embedding expressions in strings using #{}", deck: 0, tags: [1], },
+    answer: "Embedding expressions in strings using ", deck: 0, tags: [1], },
   { question: "How do you iterate over an array in Ruby?",
     answer: "Use .each, .map, .select, or other enumerable methods", deck: 0, tags: [1, 29], },
   { question: "What is a Ruby block?", answer: "A chunk of code that can be passed to methods",
@@ -243,7 +243,7 @@ card_data = [
 ]
 
 # Create cards
-cards = card_data.map.with_index do |card_info, index|
+cards = card_data.map.with_index do |card_info, _index|
   Card.create!(
     front: card_info[:question],
     back: card_info[:answer],

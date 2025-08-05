@@ -14,7 +14,7 @@ end
 use Rack::JSONBodyParser
 
 # Mount all controllers
-# ex: `use AuthorsController`
+use DecksController
 
 # Our main application controller (handles root route and fallbacks)
 run ApplicationController
