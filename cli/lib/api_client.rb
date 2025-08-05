@@ -20,7 +20,7 @@ class APIClient
     Deck.new(response)
   end
 
-  def create_deck(name:, description: nil)
+  def create_deck(name:, description:)
     make_request(:post, "/decks", { name: name, description: description })
   end
 
