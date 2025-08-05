@@ -2,7 +2,6 @@ require_relative "api_client"
 require_relative "commands/deck_commands"
 require_relative "helpers/display_helper"
 
-
 class CLIInterface
   include DeckCommands
   include DisplayHelper

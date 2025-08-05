@@ -16,33 +16,41 @@ module DeckCommands
   end
 
   def manage_deck
-    results = load_decks
+    @action = "Manage"
+    load_and_display_deck_choices
+    manage_selected_deck
+  end
 
-    display_deck_choices(results)
+  def create_deck
+    if create_new_deck
+      @prompt.ok("Deck created successfully!")
+    else
+      @prompt.error("Failed to create deck")
+    end
+
+    manage_selected_deck
+  end
+
+  def update_deck
+    # @action = "Manage"
+    load_and_display_deck_choices
   end
 
   private
 
+  def load_and_display_deck_choices
+    display_deck_choices(load_decks)
+  end
+
   def display_deck_choices(decks)
     deck_choices = decks.map { |deck| { name: deck["name"], value: deck["id"] } }
     deck_choices << { name: "Back", value: :back }
-    choice = @prompt.select("=== Select a Deck to Manage ===",
+    choice = @prompt.select("=== Select a Deck to #{@action} ===",
                             deck_choices, cycle: true)
 
     return if choice == :back
 
     @deck = decks[choice]
-    select_deck
-  end
-
-  def select_deck
-    return unless @deck
-
-    puts "You selected: #{@deck['name']}\n\nWhat would you like to do?"
-    choice = @prompt.select("=== Select Card Management Option ===",
-                            DECK_MENU_OPTIONS, cycle: true)
-
-    send(choice) unless choice == :back
   end
 
   def load_decks
@@ -78,29 +86,56 @@ module DeckCommands
     puts "   #{card_count} cards"
   end
 
+  def show_current_deck_values(deck)
+    puts "\nCurrent values:"
+    puts "Name: #{deck['name']}"
+    puts "Description: #{deck['description'] || 'None'}"
+  end
+
+  def manage_selected_deck
+    return unless @deck
+
+    puts "You selected: #{@deck['name']}\n\nWhat would you like to do?"
+    choice = @prompt.select("=== Select Card Management Option ===",
+                            DECK_MENU_OPTIONS, cycle: true)
+
+    send(choice) unless choice == :back
+  end
+
   def deck_result_has_error?(result)
     (result.is_a?(Hash) && result.key?("error")) || !result.is_a?(Array)
   end
 
   def handle_deck_error(result)
     if result.is_a?(Hash) && result.key?("error")
-      prompt.error("Error: #{result['error']}")
+      @prompt.error("Error: #{result['error']}")
     else
-      prompt.error("Unexpected response format")
+      @prompt.error("Unexpected response format")
     end
   end
 
   def show_no_decks_message
-    prompt.warn("📭 No decks found. Create your first deck!")
+    @prompt.warn("📭 No decks found. Create your first deck!")
   end
 
   def no_decks_available?(decks_result)
     decks_result.key?("error") || decks_result.empty?
   end
 
-  def show_current_deck_values(deck)
-    puts "\nCurrent values:"
-    puts "Name: #{deck['name']}"
-    puts "Description: #{deck['description'] || 'None'}"
+  def create_new_deck
+    puts "\n=== Creating New Deck... ==="
+    name = prompt_user_for_required_string("name")
+    description = prompt_user_for_required_string("description")
+
+    result = @api_client.create_deck(name: name, description: description)
+
+    !result.key?("error")
+  end
+
+  def prompt_user_for_required_string(string_name)
+    @prompt.ask("Enter #{string_name}:") do |q|
+      q.modify :strip, :capitalize
+      q.required true
+    end
   end
 end
