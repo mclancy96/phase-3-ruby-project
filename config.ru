@@ -10,11 +10,7 @@ use Rack::Cors do
   end
 end
 
-# Parse JSON from the request body into the params hash
 use Rack::JSONBodyParser
 
-# Mount all controllers
-# ex: `use AuthorsController`
-
-# Our main application controller (handles root route and fallbacks)
+use DecksController
 run ApplicationController

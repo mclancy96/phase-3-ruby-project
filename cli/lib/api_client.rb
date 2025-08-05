@@ -14,7 +14,10 @@ class APIClient
   end
 
   def get_deck(id)
-    make_request(:get, "/decks/#{id}")
+    response = make_request(:get, "/decks/#{id}")
+    return response if response.key?("error")
+
+    Deck.new(response)
   end
 
   def create_deck(name:, description: nil)
