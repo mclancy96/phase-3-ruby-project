@@ -19,28 +19,12 @@ module DisplayHelper
     puts "└─────────────────────────────────────┘"
   end
 
-  def display_error(message)
-    @prompt.error("Error: #{message}")
-  end
-
-  def display_success(message)
-    @prompt.success(message.to_s)
-  end
-
-  def display_info(message)
-    @prompt.say(message.to_s, color: :blue)
-  end
-
-  def display_warning(message)
-    @prompt.warn(message.to_s)
-  end
-
   def pause_for_user
     puts "\nPress Enter to continue..."
     gets
   end
 
-  def big_brain_time
+  def big_brain_time # rubocop:disable Metrics/MethodLength
     "┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │                                                                                                                                                                 │
 │                                                                                                                                                                 │
@@ -60,7 +44,7 @@ module DisplayHelper
 ".freeze
   end
 
-  def brain
+  def brain # rubocop:disable Metrics/MethodLength
     "████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████
 ████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████
 ████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████
@@ -128,7 +112,7 @@ module DisplayHelper
 ".freeze
   end
 
-  def stove
+  def stove # rubocop:disable Metrics/MethodLength
     "
 
 ██▓▓▓▓▓▓▓▓███████▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒░░░░░░░░░░░░░░░░░▒▓▓▓▓▓▓██████▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓███████▓▓▓▓
