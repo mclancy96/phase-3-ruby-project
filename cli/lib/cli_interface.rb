@@ -8,6 +8,7 @@ class CLIInterface
 
   MAIN_MENU_OPTIONS = [
     { name: "View all decks", value: :view_decks },
+    { name: "View one deck", value: :view_deck },
     { name: "Create a new deck", value: :create_deck },
     { name: "Rename or delete a deck", value: :update_deck },
     { name: "Exit", value: :exit },

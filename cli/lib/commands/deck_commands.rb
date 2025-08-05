@@ -1,17 +1,41 @@
+require "pry"
+require_relative "card_commands"
 module DeckCommands
+  include CardCommands
+
   def view_decks
-    puts "📚 Loading decks..."
-    result = api_client.get_decks
+    results = load_decks
 
-    return handle_deck_error(result) if deck_result_has_error?(result)
-    return show_no_decks_message if result.empty?
+    display_decks_details(results)
+  end
 
-    display_decks(result)
+  def view_deck
+    results = load_decks
+
+    display_deck_choices(results)
   end
 
   private
 
-  def display_decks(decks)
+  def display_deck_choices(decks)
+    deck_choices = decks.map { |deck| { name: deck["name"], value: deck["id"] } }
+    deck_choices << { name: "Back", value: :back }
+    choice = @prompt.select("=== Flash Card Manager CLI ===", deck_choices, cycle: true)
+    puts "You chose: #{choice}"
+  end
+
+  def load_decks
+    puts "📚 Loading decks..."
+    result = api_client.get_decks
+
+    return handle_deck_error(result) if deck_result_has_error?(result)
+
+    return show_no_decks_message if result.empty?
+
+    result
+  end
+
+  def display_decks_details(decks)
     puts "\n=== Your Decks ==="
     decks.each_with_index { |deck, index| display_single_deck(deck, index) }
   end
@@ -25,12 +49,12 @@ module DeckCommands
 
   def display_deck_description(deck)
     description = deck["description"]
-    puts "   📝 #{description}" if description && !description.empty?
+    puts "   Description: #{description}" if description && !description.empty?
   end
 
   def display_deck_card_count(deck)
     card_count = deck["cards"]&.length || 0
-    puts "   🃏 #{card_count} cards"
+    puts "   #{card_count} cards"
   end
 
   def deck_result_has_error?(result)
@@ -39,14 +63,14 @@ module DeckCommands
 
   def handle_deck_error(result)
     if result.is_a?(Hash) && result.key?("error")
-      prompt.say("❌ Error: #{result['error']}", color: :red)
+      prompt.error("Error: #{result['error']}")
     else
-      prompt.say("❌ Unexpected response format", color: :red)
+      prompt.error("Unexpected response format")
     end
   end
 
   def show_no_decks_message
-    prompt.say("📭 No decks found. Create your first deck!", color: :yellow)
+    prompt.warn("📭 No decks found. Create your first deck!")
   end
 
   def no_decks_available?(decks_result)
