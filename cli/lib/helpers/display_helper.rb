@@ -10,18 +10,82 @@ module DisplayHelper
   end
 
   def display_card_preview(card)
-    puts "┌─────────────────────────────────────┐"
-    puts "│ FRONT:                              │"
-    puts "│ #{card['front'][0..35].ljust(35)} │"
-    puts "├─────────────────────────────────────┤"
-    puts "│ BACK:                               │"
-    puts "│ #{card['back'][0..35].ljust(35)} │"
-    puts "└─────────────────────────────────────┘"
+    print_flash_card_side(card, "front")
+    @prompt.keypress("Press space or enter to continue", keys: %i[space return])
+    print_flash_card_side(card, "back")
   end
 
   def pause_for_user
     puts "\nPress Enter to continue..."
     gets
+  end
+
+  private
+
+  def print_flash_card_side(card, side_name)
+    lines = wrap_text(card[side_name])
+    print_top(side_name.upcase)
+    print_lines(lines)
+    print_bottom_border
+  end
+
+  def wrap_text(text, width = 35)
+    return [] if text.nil? || text.empty?
+
+    words = text.split(/\s+/)
+    lines = []
+    current_line = ""
+
+    words.each do |word|
+      current_line = measure_and_build_line(current_line, word, width, lines)
+    end
+
+    lines << current_line unless current_line.empty?
+    lines
+  end
+
+  def measure_and_build_line(current_line, word, width, lines)
+    if line_too_long?(current_line, word, width) && !current_line.empty?
+      lines << current_line
+      word
+    else
+      build_line(current_line, word)
+    end
+  end
+
+  def line_too_long?(current_line, word, width)
+    "#{current_line} #{word}".length > width
+  end
+
+  def build_line(current_line, word)
+    current_line.empty? ? word : "#{current_line} #{word}"
+  end
+
+  def print_lines(lines, width = 35)
+    if lines.empty?
+      puts "│                                     │"
+    else
+      lines.each do |line|
+        print_ljust_line(line, width)
+      end
+    end
+  end
+
+  def print_top(section_name, width = 35)
+    print_top_border
+    print_ljust_line(section_name, width)
+  end
+
+  def print_ljust_line(print_string, width)
+    puts "│ #{print_string.ljust(width)} │"
+  end
+
+  def print_top_border
+    puts "┌─────────────────────────────────────┐"
+  end
+
+  def print_bottom_border
+    puts "└─────────────────────────────────────┘"
   end
 
   def big_brain_time # rubocop:disable Metrics/MethodLength
