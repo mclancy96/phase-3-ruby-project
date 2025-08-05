@@ -3,13 +3,19 @@ require_relative "card_commands"
 module DeckCommands
   include CardCommands
 
+  DECK_MENU_OPTIONS = [
+    { name: "View cards in this deck", value: :view_cards },
+    { name: "Add a new card", value: :add_card },
+    { name: "Go back to main menu", value: :back },
+  ].freeze
+
   def view_decks
     results = load_decks
 
     display_decks_details(results)
   end
 
-  def view_deck
+  def manage_deck
     results = load_decks
 
     display_deck_choices(results)
@@ -20,13 +26,28 @@ module DeckCommands
   def display_deck_choices(decks)
     deck_choices = decks.map { |deck| { name: deck["name"], value: deck["id"] } }
     deck_choices << { name: "Back", value: :back }
-    choice = @prompt.select("=== Flash Card Manager CLI ===", deck_choices, cycle: true)
-    puts "You chose: #{choice}"
+    choice = @prompt.select("=== Select a Deck to Manage ===",
+                            deck_choices, cycle: true)
+
+    return if choice == :back
+
+    @deck = decks[choice]
+    select_deck
+  end
+
+  def select_deck
+    return unless @deck
+
+    puts "You selected: #{@deck['name']}\n\nWhat would you like to do?"
+    choice = @prompt.select("=== Select Card Management Option ===",
+                            DECK_MENU_OPTIONS, cycle: true)
+
+    send(choice) unless choice == :back
   end
 
   def load_decks
     puts "📚 Loading decks..."
-    result = api_client.get_decks
+    result = @api_client.get_decks
 
     return handle_deck_error(result) if deck_result_has_error?(result)
 

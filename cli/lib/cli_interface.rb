@@ -2,19 +2,18 @@ require_relative "api_client"
 require_relative "commands/deck_commands"
 require_relative "helpers/display_helper"
 
+
 class CLIInterface
   include DeckCommands
   include DisplayHelper
 
   MAIN_MENU_OPTIONS = [
-    { name: "View all decks", value: :view_decks },
-    { name: "View one deck", value: :view_deck },
+    { name: "View details of all decks", value: :view_decks },
+    { name: "Manage cards in deck", value: :manage_deck },
     { name: "Create a new deck", value: :create_deck },
     { name: "Rename or delete a deck", value: :update_deck },
     { name: "Exit", value: :exit },
   ].freeze
-
-  attr_reader :api_client, :prompt
 
   def initialize
     @api_client = APIClient.new
