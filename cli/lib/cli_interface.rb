@@ -10,7 +10,8 @@ class CLIInterface
     { name: "View details of all decks", value: :view_decks },
     { name: "Manage cards in deck", value: :manage_deck },
     { name: "Create a new deck", value: :create_deck },
-    { name: "Rename or delete a deck", value: :update_deck },
+    { name: "Change a deck's name or description", value: :update_deck },
+    { name: "Delete a deck", value: :delete_deck },
     { name: "Exit", value: :exit },
   ].freeze
 

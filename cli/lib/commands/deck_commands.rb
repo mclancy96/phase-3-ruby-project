@@ -39,6 +39,11 @@ module DeckCommands
     load_and_display_deck_choices
   end
 
+  def delete_deck
+    # @action = "Manage"
+    load_and_display_deck_choices
+  end
+
   private
 
   def load_and_display_deck_choices
