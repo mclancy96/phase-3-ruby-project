@@ -20,6 +20,13 @@ module DisplayHelper
     gets
   end
 
+  def prompt_user_for_required_string(string_name)
+    @prompt.ask("Enter #{string_name}:") do |q|
+      q.modify :strip, :capitalize
+      q.required true
+    end
+  end
+
   private
 
   def print_flash_card_side(card, side_name)

@@ -1,7 +1,9 @@
 require "pry"
 require_relative "card_commands"
+require_relative "../helpers/display_helper"
 module DeckCommands
   include CardCommands
+  include DisplayHelper
 
   DECK_MENU_OPTIONS = [
     { name: "View cards in this deck", value: :view_cards },
@@ -22,10 +24,11 @@ module DeckCommands
   end
 
   def create_deck
-    if create_new_deck
-      @prompt.ok("Deck created successfully!")
-    else
+    new_deck = create_new_deck
+    if new_deck.key?("error")
       @prompt.error("Failed to create deck")
+    else
+      @prompt.ok("#{new_deck['name']} Deck created successfully!")
     end
 
     manage_selected_deck
@@ -127,15 +130,6 @@ module DeckCommands
     name = prompt_user_for_required_string("name")
     description = prompt_user_for_required_string("description")
 
-    result = @api_client.create_deck(name: name, description: description)
-
-    !result.key?("error")
-  end
-
-  def prompt_user_for_required_string(string_name)
-    @prompt.ask("Enter #{string_name}:") do |q|
-      q.modify :strip, :capitalize
-      q.required true
-    end
+    @api_client.create_deck(name: name, description: description)
   end
 end
