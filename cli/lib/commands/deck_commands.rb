@@ -1,4 +1,3 @@
-require "pry"
 require_relative "card_commands"
 require_relative "../helpers/display_helper"
 module DeckCommands
@@ -7,7 +6,10 @@ module DeckCommands
 
   DECK_MENU_OPTIONS = [
     { name: "View cards in this deck", value: :view_cards },
-    { name: "Add a new card", value: :add_card },
+    { name: "Manage tags for this card", value: :manage_card },
+    { name: "Add a new card to this deck", value: :create_card },
+    { name: "Change a card's front or back", value: :update_card },
+    { name: "Delete a card", value: :delete_card },
     { name: "Go back to main menu", value: :back },
   ].freeze
 
@@ -18,11 +20,13 @@ module DeckCommands
   end
 
   def manage_deck
+    @action = "Manage"
     manage_selected_deck if load_and_display_deck_choices
   end
 
   def create_deck
     create_new_deck
+    @action = "Manage"
     manage_selected_deck
   end
 
