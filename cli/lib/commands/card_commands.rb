@@ -8,8 +8,7 @@ module CardCommands
 
   CARD_MENU_OPTIONS = [
     { name: "View tags for this card", value: :view_tags },
-    { name: "Add a new tag to this card", value: :add_tag },
-    { name: "Remove a tag from this card", value: :remove_tag },
+    { name: "Add/Remove tags to/from this card", value: :select_tags },
     { name: "Update/Delete a tag", value: :change_tag },
     { name: "Go back to card management menu", value: :go_back },
   ].freeze

@@ -64,6 +64,10 @@ class APIClient
     make_request(:get, "/decks/#{deck_id}/cards")
   end
 
+  def get_tags_by_card(card_id)
+    make_request(:get, "/cards/#{card_id}/tags")
+  end
+
   # Tag API methods
   def get_tags
     make_request(:get, "/tags")
