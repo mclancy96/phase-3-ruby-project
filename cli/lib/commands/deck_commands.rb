@@ -18,19 +18,11 @@ module DeckCommands
   end
 
   def manage_deck
-    @action = "Manage"
     manage_selected_deck if load_and_display_deck_choices
   end
 
   def create_deck
-    new_deck = create_new_deck
-    if new_deck.key?("error")
-      @prompt.error("Failed to create deck")
-    else
-      @prompt.ok("#{new_deck['name']} Deck created successfully!\n")
-    end
-    @deck = new_deck
-
+    create_new_deck
     manage_selected_deck
   end
 
@@ -103,7 +95,6 @@ module DeckCommands
   def manage_selected_deck
     return unless @deck
 
-    puts "You selected: #{@deck['name']}"
     choice = @prompt.select("=== Select Card Management Option for #{@deck['name']} ===",
                             DECK_MENU_OPTIONS, cycle: true)
 
@@ -132,17 +123,20 @@ module DeckCommands
 
   def create_new_deck
     puts "\n=== Creating New Deck... ==="
-    name = prompt_user_for_required_string("name")
-    description = prompt_user_for_required_string("description")
-
-    @api_client.create_deck(name: name, description: description)
+    name = prompt_user_for_required_string(string_name: "name", titleize: true)
+    description = prompt_user_for_required_string(string_name: "description")
+    result = @api_client.create_deck(name: name, description: description)
+    handle_result(result)
   end
 
   def update_selected_deck
     puts "\n=== Update #{@deck['name']}... ==="
-    name = prompt_user_for_required_string("name", @deck["name"])
-    description = prompt_user_for_required_string("description", @deck["description"])
-    @api_client.update_deck(@deck["id"], name: name, description: description)
+    name = prompt_user_for_required_string(string_name: "name", value: @deck["name"],
+                                           titleize: true)
+    description = prompt_user_for_required_string(string_name: "description",
+                                                  value: @deck["description"])
+    result = @api_client.update_deck(@deck["id"], name: name, description: description)
+    handle_result(result)
   end
 
   def delete_selected_deck
@@ -151,6 +145,16 @@ module DeckCommands
       q.required true
     end
 
-    @api_client.delete_deck(@deck["id"])
+    result = @api_client.delete_deck(@deck["id"])
+    handle_result(result)
+  end
+
+  def handle_result(result)
+    if result.key?("error")
+      @prompt.error("Failed to #{@action} deck: #{result['error']}")
+    else
+      @prompt.ok("#{result['name']} #{@action}d successfully!")
+      @deck = result
+    end
   end
 end

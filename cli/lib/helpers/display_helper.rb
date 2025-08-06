@@ -15,12 +15,13 @@ module DisplayHelper
     print_flash_card_side(card, "back")
   end
 
-  def prompt_user_for_required_string(string_name, value = "")
-    @prompt.ask("Enter #{string_name}:") do |q|
-      q.modify :strip, :capitalize
+  def prompt_user_for_required_string(string_name:, value: "", titleize: false)
+    result = @prompt.ask("Enter #{string_name}:") do |q|
+      q.modify :strip
       q.required true
       q.value value
     end
+    titleize ? result.split.map(&:capitalize).join(" ") : result
   end
 
   private
