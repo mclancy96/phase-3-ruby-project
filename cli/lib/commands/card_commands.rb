@@ -142,8 +142,7 @@ module CardCommands
     front = prompt_user_for_required_string(string_name: "front", titleize: true)
     back = prompt_user_for_required_string(string_name: "back")
     result = @api_client.create_card(front: front, back: back, deck_id: @deck["id"])
-    binding.pry
-    handle_result(result)
+    handle_card_result(result)
   end
 
   def update_selected_card
@@ -153,7 +152,7 @@ module CardCommands
     back = prompt_user_for_required_string(string_name: "back",
                                            value: @card["back"])
     result = @api_client.update_card(@card["id"], front: front, back: back)
-    handle_result(result)
+    handle_card_result(result)
   end
 
   def delete_selected_card
@@ -163,11 +162,11 @@ module CardCommands
     end
 
     result = @api_client.delete_card(@card["id"])
-    handle_result(result)
+    handle_card_result(result)
   end
 
-  def handle_result(result)
-    if result.key?(:error)
+  def handle_card_result(result)
+    if result.key?("error")
       @prompt.error("Failed to #{@action} card: #{result['error']}")
     else
       @prompt.ok("#{result['front']} #{@action}d successfully!")

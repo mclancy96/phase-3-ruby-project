@@ -131,7 +131,7 @@ module DeckCommands
     name = prompt_user_for_required_string(string_name: "name", titleize: true)
     description = prompt_user_for_required_string(string_name: "description")
     result = @api_client.create_deck(name: name, description: description)
-    handle_result(result)
+    handle_deck_result(result)
   end
 
   def update_selected_deck
@@ -141,7 +141,7 @@ module DeckCommands
     description = prompt_user_for_required_string(string_name: "description",
                                                   value: @deck["description"])
     result = @api_client.update_deck(@deck["id"], name: name, description: description)
-    handle_result(result)
+    handle_deck_result(result)
   end
 
   def delete_selected_deck
@@ -151,10 +151,10 @@ module DeckCommands
     end
 
     result = @api_client.delete_deck(@deck["id"])
-    handle_result(result)
+    handle_deck_result(result)
   end
 
-  def handle_result(result)
+  def handle_deck_result(result)
     if result.key?("error")
       @prompt.error("Failed to #{@action} deck: #{result['error']}")
     else
