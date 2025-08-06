@@ -2,6 +2,12 @@
 
 puts "🌱 Seeding ..."
 
+# Clear existing data
+CardTag.destroy_all
+Card.destroy_all
+Deck.destroy_all
+Tag.destroy_all
+
 # Create tags
 tags = [
   "Programming", "Ruby", "JavaScript", "Database", "SQL", "HTML", "CSS", "Python",
