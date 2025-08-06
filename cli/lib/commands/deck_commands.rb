@@ -6,7 +6,7 @@ module DeckCommands
 
   DECK_MENU_OPTIONS = [
     { name: "View cards in this deck", value: :view_cards },
-    { name: "Manage tags for this card", value: :manage_card },
+    { name: "Manage cards for this deck", value: :manage_card },
     { name: "Add a new card to this deck", value: :create_card },
     { name: "Change a card's front or back", value: :update_card },
     { name: "Delete a card", value: :delete_card },

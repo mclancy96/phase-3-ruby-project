@@ -1,27 +1,28 @@
 require_relative "tag_commands"
 require_relative "../helpers/display_helper"
+require "pry"
 
 module CardCommands
   include TagCommands
   include DisplayHelper
 
   CARD_MENU_OPTIONS = [
-    { name: "View cards in this card", value: :view_cards },
-    { name: "Manage tags for this card", value: :manage_card },
-    { name: "Add a new card to this card", value: :create_card },
-    { name: "Change a card's front or back", value: :update_card },
-    { name: "Delete a card", value: :delete_card },
-    { name: "Go back to main menu", value: :back },
+    { name: "View tags for this card", value: :view_tags },
+    { name: "Add a new tag to this card", value: :add_tag },
+    { name: "Remove a tag from this card", value: :remove_tag },
+    { name: "Update/Delete a tag", value: :change_tag },
+    { name: "Go back to card management menu", value: :back },
   ].freeze
 
   def view_cards
     results = load_cards
-
-    display_cards_details(results)
+    display_cards_details(results) unless results.empty?
+    manage_selected_deck
   end
 
   def manage_card
     manage_selected_card if load_and_display_card_choices
+    manage_selected_deck
   end
 
   def create_card
@@ -32,21 +33,24 @@ module CardCommands
   def update_card
     @action = "Update"
     update_selected_card if load_and_display_card_choices
+    manage_selected_deck
   end
 
   def delete_card
     @action = "Delete"
     delete_selected_card if load_and_display_card_choices
+    manage_selected_deck
   end
 
   private
 
   def load_and_display_card_choices
-    display_card_choices(load_cards)
+    results = load_cards
+    display_card_choices(results) unless results.empty?
   end
 
   def display_card_choices(cards)
-    card_choices = cards.map { |card| { name: card["name"], value: card["id"] } }
+    card_choices = cards.map { |card| { name: card["front"], value: card["id"] } }
     card_choices << { name: "Back", value: :back }
     choice = @prompt.select("=== Select a Card to #{@action} ===",
                             card_choices, cycle: true)
@@ -57,48 +61,54 @@ module CardCommands
   end
 
   def load_cards
-    puts "📚 Loading cards..."
-    result = @api_client.get_cards
+    puts "📚 Loading cards for #{@deck['front']}..."
+    result = @api_client.get_cards_by_deck(@deck["id"])
 
-    return handle_card_error(result) if card_result_has_error?(result)
+    if card_result_has_error?(result)
+      handle_card_error(result)
+      return []
+    end
 
-    return show_no_cards_message if result.empty?
+    show_no_cards_message if result.empty?
 
     result
   end
 
   def display_cards_details(cards)
-    puts "\n=== Your Cards ==="
+    puts "\n=== Cards in #{@deck['front']}==="
     cards.each_with_index { |card, index| display_single_card(card, index) }
   end
 
   def display_single_card(card, index)
-    puts "#{index + 1}. #{card['name']}"
-    display_card_description(card)
-    display_card_card_count(card)
-    puts
+    puts "#{index + 1}. #{card['front']}"
+    display_card_preview(card)
+    display_card_tags(card)
   end
 
-  def display_card_description(card)
-    description = card["description"]
-    puts "   Description: #{description}" if description && !description.empty?
+  def display_card_tags(card)
+    puts "Tags: #{card_tag_display_message(card)}\n\n"
   end
 
-  def display_card_card_count(card)
-    card_count = card["cards"]&.length || 0
-    puts "   #{card_count} cards"
+  def card_tag_display_message(card)
+    if card["tags"].length.positive?
+      card["tags"].map do |tag|
+        tag["name"]
+      end.join(", ")
+    else
+      "No tags selected"
+    end
   end
 
   def show_current_card_values(card)
     puts "\nCurrent values:"
-    puts "Name: #{card['name']}"
-    puts "Description: #{card['description'] || 'None'}"
+    puts "Front: #{card['front']}"
+    puts "Back: #{card['back']}"
   end
 
   def manage_selected_card
     return unless @card
 
-    choice = @prompt.select("=== Select Card Management Option for #{@card['name']} ===",
+    choice = @prompt.select("=== Select Tag Management Option for #{@card['front']} ===",
                             CARD_MENU_OPTIONS, cycle: true)
 
     send(choice) unless choice == :back
@@ -118,6 +128,7 @@ module CardCommands
 
   def show_no_cards_message
     @prompt.warn("📭 No cards found. Create your first card!")
+    []
   end
 
   def no_cards_available?(cards_result)
@@ -126,24 +137,24 @@ module CardCommands
 
   def create_new_card
     puts "\n=== Creating New Card... ==="
-    name = prompt_user_for_required_string(string_name: "name", titleize: true)
-    description = prompt_user_for_required_string(string_name: "description")
-    result = @api_client.create_card(name: name, description: description)
+    front = prompt_user_for_required_string(string_front: "front", titleize: true)
+    back = prompt_user_for_required_string(string_front: "back")
+    result = @api_client.create_card(front: front, back: back)
     handle_result(result)
   end
 
   def update_selected_card
-    puts "\n=== Update #{@card['name']}... ==="
-    name = prompt_user_for_required_string(string_name: "name", value: @card["name"],
-                                           titleize: true)
-    description = prompt_user_for_required_string(string_name: "description",
-                                                  value: @card["description"])
-    result = @api_client.update_card(@card["id"], name: name, description: description)
+    puts "\n=== Update #{@card['front']}... ==="
+    front = prompt_user_for_required_string(string_front: "front", value: @card["front"],
+                                            titleize: true)
+    back = prompt_user_for_required_string(string_front: "back",
+                                           value: @card["back"])
+    result = @api_client.update_card(@card["id"], front: front, back: back)
     handle_result(result)
   end
 
   def delete_selected_card
-    return unless @prompt.yes?("Would you like to delete card #{@card['name']}?") do |q|
+    return unless @prompt.yes?("Would you like to delete card #{@card['front']}?") do |q|
       q.default true
       q.required true
     end
@@ -156,7 +167,7 @@ module CardCommands
     if result.key?("error")
       @prompt.error("Failed to #{@action} card: #{result['error']}")
     else
-      @prompt.ok("#{result['name']} #{@action}d successfully!")
+      @prompt.ok("#{result['front']} #{@action}d successfully!")
       @card = result
     end
   end
