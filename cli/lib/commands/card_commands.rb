@@ -65,8 +65,8 @@ module CardCommands
     puts "📚 Loading cards for #{@deck['name']}..."
     result = @api_client.get_cards_by_deck(@deck["id"])
 
-    if card_result_has_error?(result)
-      handle_card_error(result)
+    if result_has_error?(result)
+      handle_error(result)
       return []
     end
 
@@ -113,18 +113,6 @@ module CardCommands
                             CARD_MENU_OPTIONS, cycle: true)
 
     send(choice) unless choice == :go_back
-  end
-
-  def card_result_has_error?(result)
-    (result.is_a?(Hash) && result.key?("error")) || !result.is_a?(Array)
-  end
-
-  def handle_card_error(result)
-    if result.is_a?(Hash) && result.key?("error")
-      @prompt.error("Error: #{result['error']}")
-    else
-      @prompt.error("Unexpected response format")
-    end
   end
 
   def show_no_cards_message

@@ -62,7 +62,7 @@ module DeckCommands
     puts "📚 Loading decks..."
     result = @api_client.get_decks
 
-    return handle_deck_error(result) if deck_result_has_error?(result)
+    return handle_error(result) if result_has_error?(result)
 
     return show_no_decks_message if result.empty?
 
@@ -106,11 +106,11 @@ module DeckCommands
     send(choice) unless choice == :go_back
   end
 
-  def deck_result_has_error?(result)
+  def result_has_error?(result)
     (result.is_a?(Hash) && result.key?("error")) || !result.is_a?(Array)
   end
 
-  def handle_deck_error(result)
+  def handle_error(result)
     if result.is_a?(Hash) && result.key?("error")
       @prompt.error("Error: #{result['error']}")
     else

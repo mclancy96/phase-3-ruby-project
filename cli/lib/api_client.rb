@@ -93,6 +93,15 @@ class APIClient
     make_request(:get, "/tags/#{tag_id}/cards")
   end
 
+  # CardTag API methods
+  def add_card_tag(card_id:, tag_id:)
+    make_request(:post, "/card_tags", { card_id: card_id, tag_id: tag_id })
+  end
+
+  def remove_card_tag(card_id:, tag_id:)
+    make_request(:delete, "/card_tags", { card_id: card_id, tag_id: tag_id })
+  end
+
   private
 
   def make_request(method, endpoint, params = {})
@@ -106,6 +115,10 @@ class APIClient
     when :patch
       response = RestClient.patch(url, params.to_json, content_type: :json)
     when :delete
+      if params.any?
+        query_string = params.map { |key, value| "#{key}=#{value}" }.join("&")
+        url = "#{url}?#{query_string}"
+      end
       response = RestClient.delete(url)
     end
 

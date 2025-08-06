@@ -14,5 +14,6 @@ use Rack::JSONBodyParser
 
 use DecksController
 use CardsController
+use CardTagsController
 use TagsController
 run ApplicationController

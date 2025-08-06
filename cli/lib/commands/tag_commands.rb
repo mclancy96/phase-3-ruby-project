@@ -1,5 +1,5 @@
 require_relative "../helpers/display_helper"
-
+require "pry"
 module TagCommands
   include DisplayHelper
 
@@ -17,34 +17,77 @@ module TagCommands
   end
 
   def select_tags
-
+    choose_tags_from_options
+    manage_selected_card
   end
 
   def change_tag
-
+    
   end
 
   private
 
-  def create_tag
-    @action = "Create"
-    create_new_tag
-    manage_selected_tag
-    manage_selected_card
+  def choose_tags_from_options
+    all_tags = load_tags
+    return if all_tags.empty?
+
+    current_tag_names = @card["tags"].map { |tag| tag["name"] }
+    choices = multi_select_prompt_with_tags(all_tags, current_tag_names)
+    update_card_tags_based_on_selections(choices)
   end
 
-  def update_tag
-    @action = "Update"
-    update_selected_tag if load_and_display_tag_choices
-    manage_selected_card
+  def multi_select_prompt_with_tags(all_tags, current_tag_names)
+    @prompt.multi_select("Select tags for '#{@card['front']}':",
+                         help: "\nPress spacebar to select options and enter to confirm",
+                         show_help: :always) do |menu|
+      menu.default(*current_tag_names) unless current_tag_names.empty?
+      all_tags.each do |tag|
+        menu.choice tag["name"], tag["id"]
+      end
+    end
   end
 
-  def delete_tag
-    @action = "Delete"
-    delete_selected_tag if load_and_display_tag_choices
-    manage_selected_card
+  def update_card_tags_based_on_selections(choices)
+    current_tag_ids = @card["tags"].map { |tag| tag["id"] }
+    tags_to_remove = current_tag_ids - choices
+    remove_tags_from_card(tags_to_remove) unless tags_to_remove.empty?
+    tags_to_add = choices - current_tag_ids
+    add_tags_to_card(tags_to_add) unless tags_to_add.empty?
+    @card = @api_client.get_card(@card["id"])
   end
 
+  def remove_tags_from_card(tags_to_remove)
+    tags_to_remove.each do |tag|
+      @api_client.remove_card_tag(card_id: @card["id"].to_i, tag_id: tag)
+    end
+    puts "Removed tags #{tags_to_remove.join(', ')}"
+  end
+
+  def add_tags_to_card(tags_to_add)
+    tags_to_add.each do |tag|
+      @api_client.add_card_tag(card_id: @card["id"].to_i, tag_id: tag)
+    end
+    puts "Added tags #{tags_to_add.join(', ')}"
+  end
+
+  # def create_tag
+  #   @action = "Create"
+  #   create_new_tag
+  #   manage_selected_tag
+  #   manage_selected_card
+  # end
+
+  # def update_tag
+  #   @action = "Update"
+  #   update_selected_tag if load_and_display_tag_choices
+  #   manage_selected_card
+  # end
+
+  # def delete_tag
+  #   @action = "Delete"
+  #   delete_selected_tag if load_and_display_tag_choices
+  #   manage_selected_card
+  # end
 
   # def load_and_display_tag_choices
   #   results = load_tags
@@ -62,19 +105,19 @@ module TagCommands
   #   @tag = tags.find { |tag| tag["id"] == choice }
   # end
 
-  # def load_tags
-  #   puts "📚 Loading tags for #{@card['name']}..."
-  #   result = @api_client.get_tags_by_card(@card["id"])
+  def load_tags
+    puts "📚 Loading all tags..."
+    result = @api_client.get_tags
 
-  #   if tag_result_has_error?(result)
-  #     handle_tag_error(result)
-  #     return []
-  #   end
+    if result_has_error?(result)
+      handle_error(result)
+      return []
+    end
 
-  #   show_no_tags_message if result.empty?
+    show_no_tags_message if result.empty?
 
-  #   result
-  # end
+    result
+  end
 
   # def display_single_tag(tag, index)
   #   puts "#{index + 1}. #{tag['front']}"
@@ -109,18 +152,6 @@ module TagCommands
   #                           TAG_MENU_OPTIONS, cycle: true)
 
   #   send(choice) unless choice == :go_back
-  # end
-
-  # def tag_result_has_error?(result)
-  #   (result.is_a?(Hash) && result.key?("error")) || !result.is_a?(Array)
-  # end
-
-  # def handle_tag_error(result)
-  #   if result.is_a?(Hash) && result.key?("error")
-  #     @prompt.error("Error: #{result['error']}")
-  #   else
-  #     @prompt.error("Unexpected response format")
-  #   end
   # end
 
   # def show_no_tags_message
