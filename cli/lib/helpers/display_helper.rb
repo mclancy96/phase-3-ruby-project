@@ -9,9 +9,9 @@ module DisplayHelper
     puts "Use ↑/↓ arrow keys to navigate and ENTER to select.\n\n"
   end
 
-  def display_card_preview(card)
+  def display_card_preview(card, pause: false)
     print_flash_card_side(card, "front")
-    @prompt.keypress("Press space or enter to continue", keys: %i[space return])
+    @prompt.keypress("Press space or enter to continue", keys: %i[space return]) if pause
     print_flash_card_side(card, "back")
   end
 

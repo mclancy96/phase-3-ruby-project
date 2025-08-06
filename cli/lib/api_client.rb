@@ -105,27 +105,29 @@ class APIClient
       response = RestClient.delete(url)
     end
 
+    return {} if response.body.nil? || response.body.strip.empty?
+
     JSON.parse(response.body)
   rescue RestClient::Exception => e
     handle_api_error(e)
   rescue JSON::ParserError => e
-    { error: "Invalid JSON response: #{e.message}" }
+    { "error" => "Invalid JSON response: #{e.message}" }
   end
 
   def handle_api_error(error)
     case error.response&.code
     when 404
-      { error: "Resource not found" }
+      { "error" => "Resource not found" }
     when 422
       begin
         JSON.parse(error.response.body)
       rescue JSON::ParserError
-        { error: "Validation error" }
+        { "error" => "Validation error" }
       end
     when 500
-      { error: "Server error" }
+      { "error" => "Server error" }
     else
-      { error: "API request failed: #{error.message}" }
+      { "error" => "API request failed: #{error.message}" }
     end
   end
 end

@@ -53,12 +53,15 @@ class DecksController < ApplicationController
   rescue ActiveRecord::RecordNotFound
     status 404
     { error: "Deck not found" }.to_json
+  rescue ActiveRecord::InvalidForeignKey
+    status 422
+    { error: "Cannot delete deck: deck contains cards that must be removed first" }.to_json
   end
 
   get "/decks/:id/cards" do
     deck = Deck.find(params[:id])
     cards = deck.cards
-    cards.to_json(include: :deck)
+    cards.to_json(include: %i[deck tags])
   rescue ActiveRecord::RecordNotFound
     status 404
     { error: "Deck not found" }.to_json

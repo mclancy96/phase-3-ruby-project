@@ -17,7 +17,9 @@ class CLIInterface
 
   def initialize
     @api_client = APIClient.new
-    @prompt = TTY::Prompt.new
+    @prompt = TTY::Prompt.new(
+      active_color: :cyan
+    )
   end
 
   def run
