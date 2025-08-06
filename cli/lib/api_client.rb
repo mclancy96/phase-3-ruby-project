@@ -105,6 +105,8 @@ class APIClient
       response = RestClient.delete(url)
     end
 
+    return {} if response.body.nil? || response.body.strip.empty?
+
     JSON.parse(response.body)
   rescue RestClient::Exception => e
     handle_api_error(e)

@@ -169,6 +169,9 @@ module CardCommands
   def handle_card_result(result)
     if result.key?("error")
       @prompt.error("Failed to #{@action} card: #{result['error']}")
+    elsif @action == "Delete"
+      @prompt.ok("Card deleted successfully!")
+      @card = nil
     else
       @prompt.ok("#{result['front']} #{@action}d successfully!")
       @card = result
