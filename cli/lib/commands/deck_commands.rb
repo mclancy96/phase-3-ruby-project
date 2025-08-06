@@ -1,7 +1,9 @@
 require "pry"
 require_relative "card_commands"
+require_relative "../helpers/display_helper"
 module DeckCommands
   include CardCommands
+  include DisplayHelper
 
   DECK_MENU_OPTIONS = [
     { name: "View cards in this deck", value: :view_cards },
@@ -16,33 +18,39 @@ module DeckCommands
   end
 
   def manage_deck
-    results = load_decks
+    manage_selected_deck if load_and_display_deck_choices
+  end
 
-    display_deck_choices(results)
+  def create_deck
+    create_new_deck
+    manage_selected_deck
+  end
+
+  def update_deck
+    @action = "Update"
+    update_selected_deck if load_and_display_deck_choices
+  end
+
+  def delete_deck
+    @action = "Delete"
+    delete_selected_deck if load_and_display_deck_choices
   end
 
   private
 
+  def load_and_display_deck_choices
+    display_deck_choices(load_decks)
+  end
+
   def display_deck_choices(decks)
     deck_choices = decks.map { |deck| { name: deck["name"], value: deck["id"] } }
     deck_choices << { name: "Back", value: :back }
-    choice = @prompt.select("=== Select a Deck to Manage ===",
+    choice = @prompt.select("=== Select a Deck to #{@action} ===",
                             deck_choices, cycle: true)
 
-    return if choice == :back
+    return false if choice == :back
 
-    @deck = decks[choice]
-    select_deck
-  end
-
-  def select_deck
-    return unless @deck
-
-    puts "You selected: #{@deck['name']}\n\nWhat would you like to do?"
-    choice = @prompt.select("=== Select Card Management Option ===",
-                            DECK_MENU_OPTIONS, cycle: true)
-
-    send(choice) unless choice == :back
+    @deck = decks.find { |deck| deck["id"] == choice }
   end
 
   def load_decks
@@ -78,29 +86,75 @@ module DeckCommands
     puts "   #{card_count} cards"
   end
 
+  def show_current_deck_values(deck)
+    puts "\nCurrent values:"
+    puts "Name: #{deck['name']}"
+    puts "Description: #{deck['description'] || 'None'}"
+  end
+
+  def manage_selected_deck
+    return unless @deck
+
+    choice = @prompt.select("=== Select Card Management Option for #{@deck['name']} ===",
+                            DECK_MENU_OPTIONS, cycle: true)
+
+    send(choice) unless choice == :back
+  end
+
   def deck_result_has_error?(result)
     (result.is_a?(Hash) && result.key?("error")) || !result.is_a?(Array)
   end
 
   def handle_deck_error(result)
     if result.is_a?(Hash) && result.key?("error")
-      prompt.error("Error: #{result['error']}")
+      @prompt.error("Error: #{result['error']}")
     else
-      prompt.error("Unexpected response format")
+      @prompt.error("Unexpected response format")
     end
   end
 
   def show_no_decks_message
-    prompt.warn("📭 No decks found. Create your first deck!")
+    @prompt.warn("📭 No decks found. Create your first deck!")
   end
 
   def no_decks_available?(decks_result)
     decks_result.key?("error") || decks_result.empty?
   end
 
-  def show_current_deck_values(deck)
-    puts "\nCurrent values:"
-    puts "Name: #{deck['name']}"
-    puts "Description: #{deck['description'] || 'None'}"
+  def create_new_deck
+    puts "\n=== Creating New Deck... ==="
+    name = prompt_user_for_required_string(string_name: "name", titleize: true)
+    description = prompt_user_for_required_string(string_name: "description")
+    result = @api_client.create_deck(name: name, description: description)
+    handle_result(result)
+  end
+
+  def update_selected_deck
+    puts "\n=== Update #{@deck['name']}... ==="
+    name = prompt_user_for_required_string(string_name: "name", value: @deck["name"],
+                                           titleize: true)
+    description = prompt_user_for_required_string(string_name: "description",
+                                                  value: @deck["description"])
+    result = @api_client.update_deck(@deck["id"], name: name, description: description)
+    handle_result(result)
+  end
+
+  def delete_selected_deck
+    return unless @prompt.yes?("Would you like to delete deck #{@deck['name']}?") do |q|
+      q.default true
+      q.required true
+    end
+
+    result = @api_client.delete_deck(@deck["id"])
+    handle_result(result)
+  end
+
+  def handle_result(result)
+    if result.key?("error")
+      @prompt.error("Failed to #{@action} deck: #{result['error']}")
+    else
+      @prompt.ok("#{result['name']} #{@action}d successfully!")
+      @deck = result
+    end
   end
 end
