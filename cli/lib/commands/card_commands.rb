@@ -11,7 +11,7 @@ module CardCommands
     { name: "Add a new tag to this card", value: :add_tag },
     { name: "Remove a tag from this card", value: :remove_tag },
     { name: "Update/Delete a tag", value: :change_tag },
-    { name: "Go back to card management menu", value: :back },
+    { name: "Go back to card management menu", value: :go_back },
   ].freeze
 
   def view_cards
@@ -53,11 +53,11 @@ module CardCommands
 
   def display_card_choices(cards)
     card_choices = cards.map { |card| { name: card["front"], value: card["id"] } }
-    card_choices << { name: "Back", value: :back }
+    card_choices << { name: "Back", value: :go_back }
     choice = @prompt.select("=== Select a Card to #{@action} ===",
                             card_choices, cycle: true)
 
-    return false if choice == :back
+    return false if choice == :go_back
 
     @card = cards.find { |card| card["id"] == choice }
   end
@@ -113,7 +113,7 @@ module CardCommands
     choice = @prompt.select("=== Select Tag Management Option for #{@card['front']} ===",
                             CARD_MENU_OPTIONS, cycle: true)
 
-    send(choice) unless choice == :back
+    send(choice) unless choice == :go_back
   end
 
   def card_result_has_error?(result)
@@ -151,7 +151,8 @@ module CardCommands
                                             titleize: true)
     back = prompt_user_for_required_string(string_name: "back",
                                            value: @card["back"])
-    result = @api_client.update_card(@card["id"], front: front, back: back)
+    result = @api_client.update_card(@card["id"], front: front, back: back,
+                                                  deck_id: @card["deck_id"])
     handle_card_result(result)
   end
 
