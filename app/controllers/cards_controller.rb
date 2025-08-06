@@ -1,11 +1,6 @@
 # frozen_string_literal: true
 
 class CardsController < ApplicationController
-  get "/cards" do
-    cards = Card.all
-    cards.to_json(include: :cards)
-  end
-
   get "/cards/:id" do
     card = Card.find(params[:id])
     card.to_json(include: :cards)
