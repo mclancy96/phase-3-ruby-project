@@ -25,6 +25,7 @@ module DeckCommands
   end
 
   def create_deck
+    @action = "Create"
     create_new_deck
     @action = "Manage"
     manage_selected_deck

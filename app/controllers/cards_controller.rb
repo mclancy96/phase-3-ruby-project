@@ -3,7 +3,7 @@
 class CardsController < ApplicationController
   get "/cards/:id" do
     card = Card.find(params[:id])
-    card.to_json(include: :cards)
+    card.to_json(include: :tags)
   rescue ActiveRecord::RecordNotFound
     status 404
     { error: "Card not found" }.to_json
@@ -11,13 +11,14 @@ class CardsController < ApplicationController
 
   post "/cards" do
     card = Card.create(
-      name: params[:name],
-      description: params[:description]
+      front: params[:front],
+      back: params[:back],
+      deck_id: params[:deck_id]
     )
 
     if card.persisted?
       status 201
-      card.to_json
+      card.to_json(include: :tags)
     else
       status 422
       { errors: card.errors.full_messages }.to_json
@@ -28,8 +29,9 @@ class CardsController < ApplicationController
     card = Card.find(params[:id])
 
     if card.update(
-      name: params[:name],
-      description: params[:description]
+      front: params[:front],
+      back: params[:back],
+      deck_id: params[:deck_id]
     )
       card.to_json
     else

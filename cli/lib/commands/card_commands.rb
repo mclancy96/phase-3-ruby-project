@@ -26,8 +26,10 @@ module CardCommands
   end
 
   def create_card
+    @action = "Create"
     create_new_card
     manage_selected_card
+    manage_selected_deck
   end
 
   def update_card
@@ -61,7 +63,7 @@ module CardCommands
   end
 
   def load_cards
-    puts "📚 Loading cards for #{@deck['front']}..."
+    puts "📚 Loading cards for #{@deck['name']}..."
     result = @api_client.get_cards_by_deck(@deck["id"])
 
     if card_result_has_error?(result)
@@ -75,7 +77,7 @@ module CardCommands
   end
 
   def display_cards_details(cards)
-    puts "\n=== Cards in #{@deck['front']}==="
+    puts "\n=== Cards in #{@deck['name']}==="
     cards.each_with_index { |card, index| display_single_card(card, index) }
   end
 
@@ -137,17 +139,18 @@ module CardCommands
 
   def create_new_card
     puts "\n=== Creating New Card... ==="
-    front = prompt_user_for_required_string(string_front: "front", titleize: true)
-    back = prompt_user_for_required_string(string_front: "back")
-    result = @api_client.create_card(front: front, back: back)
+    front = prompt_user_for_required_string(string_name: "front", titleize: true)
+    back = prompt_user_for_required_string(string_name: "back")
+    result = @api_client.create_card(front: front, back: back, deck_id: @deck["id"])
+    binding.pry
     handle_result(result)
   end
 
   def update_selected_card
     puts "\n=== Update #{@card['front']}... ==="
-    front = prompt_user_for_required_string(string_front: "front", value: @card["front"],
+    front = prompt_user_for_required_string(string_name: "front", value: @card["front"],
                                             titleize: true)
-    back = prompt_user_for_required_string(string_front: "back",
+    back = prompt_user_for_required_string(string_name: "back",
                                            value: @card["back"])
     result = @api_client.update_card(@card["id"], front: front, back: back)
     handle_result(result)
@@ -164,7 +167,7 @@ module CardCommands
   end
 
   def handle_result(result)
-    if result.key?("error")
+    if result.key?(:error)
       @prompt.error("Failed to #{@action} card: #{result['error']}")
     else
       @prompt.ok("#{result['front']} #{@action}d successfully!")
