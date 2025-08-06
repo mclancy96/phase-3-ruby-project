@@ -19,8 +19,7 @@ module DeckCommands
 
   def manage_deck
     @action = "Manage"
-    load_and_display_deck_choices
-    manage_selected_deck
+    manage_selected_deck if load_and_display_deck_choices
   end
 
   def create_deck
@@ -28,20 +27,21 @@ module DeckCommands
     if new_deck.key?("error")
       @prompt.error("Failed to create deck")
     else
-      @prompt.ok("#{new_deck['name']} Deck created successfully!")
+      @prompt.ok("#{new_deck['name']} Deck created successfully!\n")
     end
+    @deck = new_deck
 
     manage_selected_deck
   end
 
   def update_deck
-    load_and_display_deck_choices
-    update_selected_deck
+    @action = "Update"
+    update_selected_deck if load_and_display_deck_choices
   end
 
   def delete_deck
-    # @action = "Manage"
-    load_and_display_deck_choices
+    @action = "Delete"
+    delete_selected_deck if load_and_display_deck_choices
   end
 
   private
@@ -56,7 +56,7 @@ module DeckCommands
     choice = @prompt.select("=== Select a Deck to #{@action} ===",
                             deck_choices, cycle: true)
 
-    return if choice == :back
+    return false if choice == :back
 
     @deck = decks.find { |deck| deck["id"] == choice }
   end
@@ -103,8 +103,8 @@ module DeckCommands
   def manage_selected_deck
     return unless @deck
 
-    puts "You selected: #{@deck['name']}\n\nWhat would you like to do?"
-    choice = @prompt.select("=== Select Card Management Option ===",
+    puts "You selected: #{@deck['name']}"
+    choice = @prompt.select("=== Select Card Management Option for #{@deck['name']} ===",
                             DECK_MENU_OPTIONS, cycle: true)
 
     send(choice) unless choice == :back
@@ -143,5 +143,14 @@ module DeckCommands
     name = prompt_user_for_required_string("name", @deck["name"])
     description = prompt_user_for_required_string("description", @deck["description"])
     @api_client.update_deck(@deck["id"], name: name, description: description)
+  end
+
+  def delete_selected_deck
+    return unless @prompt.yes?("Would you like to delete deck #{@deck['name']}?") do |q|
+      q.default true
+      q.required true
+    end
+
+    @api_client.delete_deck(@deck["id"])
   end
 end

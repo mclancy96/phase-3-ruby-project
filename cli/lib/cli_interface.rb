@@ -24,12 +24,13 @@ class CLIInterface
     display_welcome
 
     loop do
-      choice = @prompt.select("=== Flash Card Manager CLI ===", MAIN_MENU_OPTIONS, cycle: true)
+      choice = @prompt.select("=== Flash Card Manager Main Menu ===", MAIN_MENU_OPTIONS,
+                              cycle: true)
 
       break puts "\n👋 Goodbye! Happy studying!" if choice == :exit
 
       send(choice)
-      pause_for_user
+      # pause_for_user
     end
   end
 end
