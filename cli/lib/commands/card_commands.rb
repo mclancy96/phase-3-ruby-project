@@ -8,9 +8,10 @@ module CardCommands
 
   CARD_MENU_OPTIONS = [
     { name: "View tags for this card", value: :view_tags },
-    { name: "Add a new tag to this card", value: :add_tag },
-    { name: "Remove a tag from this card", value: :remove_tag },
-    { name: "Update/Delete a tag", value: :change_tag },
+    { name: "Add/Remove tags to/from this card", value: :select_tags },
+    { name: "Create a new tag", value: :create_tag },
+    { name: "Change the name of an existing tag", value: :update_tag },
+    { name: "Delete a tag", value: :delete_tag },
     { name: "Go back to card management menu", value: :go_back },
   ].freeze
 
@@ -66,8 +67,8 @@ module CardCommands
     puts "📚 Loading cards for #{@deck['name']}..."
     result = @api_client.get_cards_by_deck(@deck["id"])
 
-    if card_result_has_error?(result)
-      handle_card_error(result)
+    if result_has_error?(result)
+      handle_error(result)
       return []
     end
 
@@ -110,22 +111,11 @@ module CardCommands
   def manage_selected_card
     return unless @card
 
+    refresh_card_data
     choice = @prompt.select("=== Select Tag Management Option for #{@card['front']} ===",
                             CARD_MENU_OPTIONS, cycle: true)
 
     send(choice) unless choice == :go_back
-  end
-
-  def card_result_has_error?(result)
-    (result.is_a?(Hash) && result.key?("error")) || !result.is_a?(Array)
-  end
-
-  def handle_card_error(result)
-    if result.is_a?(Hash) && result.key?("error")
-      @prompt.error("Error: #{result['error']}")
-    else
-      @prompt.error("Unexpected response format")
-    end
   end
 
   def show_no_cards_message
@@ -164,6 +154,15 @@ module CardCommands
 
     result = @api_client.delete_card(@card["id"])
     handle_card_result(result)
+  end
+
+  def refresh_card_data
+    updated_card = @api_client.get_card(@card["id"])
+    if updated_card && !updated_card.key?("error")
+      @card = updated_card
+    else
+      @prompt.error("⚠️ Failed to refresh card data: #{updated_card['error'] if updated_card}")
+    end
   end
 
   def handle_card_result(result)

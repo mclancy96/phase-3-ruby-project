@@ -64,9 +64,19 @@ class APIClient
     make_request(:get, "/decks/#{deck_id}/cards")
   end
 
+  def get_tags_by_card(card_id)
+    make_request(:get, "/cards/#{card_id}/tags")
+  end
+
   # Tag API methods
   def get_tags
     make_request(:get, "/tags")
+  end
+
+  def get_tag_by_name(name)
+    require "uri"
+    encoded_name = URI.encode_www_form_component(name)
+    make_request(:get, "/tags?name=#{encoded_name}")
   end
 
   def get_tag(id)
@@ -89,6 +99,15 @@ class APIClient
     make_request(:get, "/tags/#{tag_id}/cards")
   end
 
+  # CardTag API methods
+  def add_card_tag(card_id:, tag_id:)
+    make_request(:post, "/card_tags", { card_id: card_id, tag_id: tag_id })
+  end
+
+  def remove_card_tag(card_id:, tag_id:)
+    make_request(:delete, "/card_tags", { card_id: card_id, tag_id: tag_id })
+  end
+
   private
 
   def make_request(method, endpoint, params = {})
@@ -102,6 +121,10 @@ class APIClient
     when :patch
       response = RestClient.patch(url, params.to_json, content_type: :json)
     when :delete
+      if params.any?
+        query_string = params.map { |key, value| "#{key}=#{value}" }.join("&")
+        url = "#{url}?#{query_string}"
+      end
       response = RestClient.delete(url)
     end
 
