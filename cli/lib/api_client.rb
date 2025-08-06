@@ -73,6 +73,12 @@ class APIClient
     make_request(:get, "/tags")
   end
 
+  def get_tag_by_name(name)
+    require "uri"
+    encoded_name = URI.encode_www_form_component(name)
+    make_request(:get, "/tags?name=#{encoded_name}")
+  end
+
   def get_tag(id)
     make_request(:get, "/tags/#{id}")
   end

@@ -2,8 +2,13 @@
 
 class TagsController < ApplicationController
   get "/tags" do
-    tags = Tag.all
-    tags.to_json(include: :cards)
+    if params[:name]
+      tags = Tag.where("tags.name = ?", params[:name])
+      tags.to_json
+    else
+      tags = Tag.all
+      tags.to_json(include: :cards)
+    end
   end
 
   get "/tags/:id" do

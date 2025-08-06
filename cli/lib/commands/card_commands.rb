@@ -9,7 +9,9 @@ module CardCommands
   CARD_MENU_OPTIONS = [
     { name: "View tags for this card", value: :view_tags },
     { name: "Add/Remove tags to/from this card", value: :select_tags },
-    { name: "Update/Delete a tag", value: :change_tag },
+    { name: "Create a new tag", value: :create_tag },
+    { name: "Change the name of an existing tag", value: :update_tag },
+    { name: "Delete a tag", value: :delete_tag },
     { name: "Go back to card management menu", value: :go_back },
   ].freeze
 
@@ -109,6 +111,7 @@ module CardCommands
   def manage_selected_card
     return unless @card
 
+    refresh_card_data
     choice = @prompt.select("=== Select Tag Management Option for #{@card['front']} ===",
                             CARD_MENU_OPTIONS, cycle: true)
 
@@ -151,6 +154,15 @@ module CardCommands
 
     result = @api_client.delete_card(@card["id"])
     handle_card_result(result)
+  end
+
+  def refresh_card_data
+    updated_card = @api_client.get_card(@card["id"])
+    if updated_card && !updated_card.key?("error")
+      @card = updated_card
+    else
+      @prompt.error("⚠️ Failed to refresh card data: #{updated_card['error'] if updated_card}")
+    end
   end
 
   def handle_card_result(result)
