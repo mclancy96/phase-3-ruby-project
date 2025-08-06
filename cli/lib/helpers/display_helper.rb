@@ -20,10 +20,11 @@ module DisplayHelper
     gets
   end
 
-  def prompt_user_for_required_string(string_name)
+  def prompt_user_for_required_string(string_name, value = "")
     @prompt.ask("Enter #{string_name}:") do |q|
       q.modify :strip, :capitalize
       q.required true
+      q.value value
     end
   end
 

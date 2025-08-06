@@ -35,8 +35,8 @@ module DeckCommands
   end
 
   def update_deck
-    # @action = "Manage"
     load_and_display_deck_choices
+    update_selected_deck
   end
 
   def delete_deck
@@ -58,7 +58,7 @@ module DeckCommands
 
     return if choice == :back
 
-    @deck = decks[choice]
+    @deck = decks.find { |deck| deck["id"] == choice }
   end
 
   def load_decks
@@ -136,5 +136,12 @@ module DeckCommands
     description = prompt_user_for_required_string("description")
 
     @api_client.create_deck(name: name, description: description)
+  end
+
+  def update_selected_deck
+    puts "\n=== Update #{@deck['name']}... ==="
+    name = prompt_user_for_required_string("name", @deck["name"])
+    description = prompt_user_for_required_string("description", @deck["description"])
+    @api_client.update_deck(@deck["id"], name: name, description: description)
   end
 end
