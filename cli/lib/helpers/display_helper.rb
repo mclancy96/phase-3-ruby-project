@@ -15,11 +15,6 @@ module DisplayHelper
     print_flash_card_side(card, "back")
   end
 
-  def pause_for_user
-    puts "\nPress Enter to continue..."
-    gets
-  end
-
   def prompt_user_for_required_string(string_name, value = "")
     @prompt.ask("Enter #{string_name}:") do |q|
       q.modify :strip, :capitalize

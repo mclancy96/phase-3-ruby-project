@@ -30,7 +30,6 @@ class CLIInterface
       break puts "\n👋 Goodbye! Happy studying!" if choice == :exit
 
       send(choice)
-      # pause_for_user
     end
   end
 end
