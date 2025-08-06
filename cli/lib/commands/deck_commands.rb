@@ -157,6 +157,9 @@ module DeckCommands
   def handle_deck_result(result)
     if result.key?("error")
       @prompt.error("Failed to #{@action} deck: #{result['error']}")
+    elsif @action == "Delete"
+      @prompt.ok("Deck deleted successfully!")
+      @card = nil
     else
       @prompt.ok("#{result['name']} #{@action}d successfully!")
       @deck = result
