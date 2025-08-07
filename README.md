@@ -27,13 +27,11 @@ A simple command-line flashcard app for quickly creating, organizing, and review
    git clone https://github.com/your-username/flashcard-cli.git
    cd flashcard-cli
    ```
-
 2. **Install dependencies**
 
    ```bash
    bundle install
    ```
-
 3. **Set up the database**
 
    ```bash
@@ -41,8 +39,8 @@ A simple command-line flashcard app for quickly creating, organizing, and review
    rake db:migrate
    rake db:seed # Optional: add sample data
    ```
-
 4. **Run the Server**
+
    ```bash
    bundle exec rake server
    ```
@@ -65,15 +63,16 @@ Once launched, you’ll be able to:
 
 Example flashcard display:
 
-```
- ___________________________
-|                           |
-|  What is a block in Ruby? |
-|___________________________|
-|  A chunk of code passed   |
-|  into a method, often     |
-|  using `do...end` or `{}`.|
-|___________________________|
+```bash
+┌─────────────────────────────────────┐
+│ FRONT                               │
+│ What is DevOps?                     │
+└─────────────────────────────────────┘
+┌─────────────────────────────────────┐
+│ BACK                                │
+│ Practice combining software         │
+│ development and IT operations       │
+└─────────────────────────────────────┘
 ```
 
 ## 🗺️ ERD
