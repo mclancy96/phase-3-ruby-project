@@ -16,7 +16,9 @@ module DeckCommands
   def view_decks
     results = load_decks
 
-    display_decks_details(results)
+    puts "Results: #{results}, #{results.empty?}"
+
+    display_decks_details(results) unless results.empty?
   end
 
   def manage_deck
@@ -44,7 +46,8 @@ module DeckCommands
   private
 
   def load_and_display_deck_choices
-    display_deck_choices(load_decks)
+    results = load_decks
+    display_deck_choices(results) unless results.empty?
   end
 
   def display_deck_choices(decks)
@@ -120,6 +123,7 @@ module DeckCommands
 
   def show_no_decks_message
     @prompt.warn("📭 No decks found. Create your first deck!")
+    []
   end
 
   def no_decks_available?(decks_result)
