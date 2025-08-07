@@ -13,10 +13,11 @@ module DisplayHelper
     print_flash_card_side(card, "front")
     if pause
       with_interrupt_handling do
-        @prompt.keypress("Press space or enter to continue", keys: %i[space return])
+        @prompt.keypress("Press space or enter to see back of card", keys: %i[space return])
       end
     end
     print_flash_card_side(card, "back")
+    puts "---------------------------------------"
   end
 
   def prompt_user_for_required_string(string_name:, value: "", titleize: false)

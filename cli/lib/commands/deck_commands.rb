@@ -44,7 +44,26 @@ module DeckCommands
     delete_resource("deck", :delete_deck, @deck["id"], @deck["name"]) if @deck
   end
 
+  def study_deck
+    @action = "Study"
+    result = load_and_display_choices("deck", :decks, @action)
+    return unless result
+
+    @deck = result
+    validate_deck_and_loop_cards
+  end
+
   private
+
+  def validate_deck_and_loop_cards
+    return puts "No cards in this deck" unless selected_deck_has_cards?
+
+    loop_through_cards_in_deck
+  end
+
+  def loop_through_cards_in_deck
+    @deck["cards"].each { |card| display_card_preview(card, pause: true) }
+  end
 
   def deck_menu_options(has_cards = true)
     options = create_menu_options_with_conditional_disable(
@@ -91,12 +110,13 @@ module DeckCommands
   def manage_selected_deck
     return unless @deck
 
-    # Check if the selected deck has any cards
-    has_cards = @deck["cards"]&.any? || false
-
     choice = @prompt.select("=== Deck > Select Card Management Option for #{@deck['name']} ===",
-                            deck_menu_options(has_cards), cycle: true)
+                            deck_menu_options(selected_deck_has_cards?), cycle: true)
 
     send(choice) unless choice == :go_back
+  end
+
+  def selected_deck_has_cards?
+    @deck && @deck["cards"]&.any?
   end
 end

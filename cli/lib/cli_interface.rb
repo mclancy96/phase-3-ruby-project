@@ -50,6 +50,7 @@ class CLIInterface
 
   def base_main_menu_options
     [
+      { name: "Select a deck to study", value: :study_deck },
       { name: "View details of all decks", value: :view_decks },
       { name: "Manage cards in a deck", value: :manage_deck },
       { name: "Change a deck's name or description", value: :update_deck },
@@ -60,15 +61,18 @@ class CLIInterface
 
   def setup_interrupt_handler
     Signal.trap("INT") do
-      puts "\n\n👋 Goodbye! Happy studying!"
-      exit(0)
+      exit_gracefully
     end
   end
 
   def with_interrupt_handling
     yield
   rescue TTY::Reader::InputInterrupt, Interrupt
-    puts "\n🛑 Operation cancelled. Returning to main menu..."
-    false
+    exit_gracefully
+  end
+
+  def exit_gracefully
+    puts "\n\n👋 Goodbye! Happy studying!"
+    exit(0)
   end
 end
