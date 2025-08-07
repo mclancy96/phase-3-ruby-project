@@ -82,7 +82,7 @@ Example flashcard display:
 
 ## 📋 User Stories
 
-See [`user-stories.md`](/user-stories.md) for a full list of user scenarios supported by this app.
+See [`user-stories.md`](user_stories.md) for a full list of user scenarios supported by this app.
 
 ## 🎯 Stretch Goals
 
