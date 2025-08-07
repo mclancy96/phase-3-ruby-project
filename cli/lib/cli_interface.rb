@@ -18,18 +18,39 @@ class CLIInterface
   def initialize
     @api_client = APIClient.new
     @prompt = TTY::Prompt.new(active_color: :cyan)
+    setup_interrupt_handler
   end
 
   def run
     display_welcome
+    main_loop
+  rescue TTY::Reader::InputInterrupt, Interrupt
+    puts "\n\n👋 Goodbye! Happy studying!"
+  end
 
+  def main_loop
     loop do
       choice = @prompt.select("=== Flash Card Manager Main Menu ===", MAIN_MENU_OPTIONS,
                               cycle: true)
-
       break puts "\n👋 Goodbye! Happy studying!" if choice == :exit
 
-      send(choice)
+      with_interrupt_handling { send(choice) }
     end
+  end
+
+  private
+
+  def setup_interrupt_handler
+    Signal.trap("INT") do
+      puts "\n\n👋 Goodbye! Happy studying!"
+      exit(0)
+    end
+  end
+
+  def with_interrupt_handling
+    yield
+  rescue TTY::Reader::InputInterrupt, Interrupt
+    puts "\n🛑 Operation cancelled. Returning to main menu..."
+    false
   end
 end

@@ -1,7 +1,7 @@
-require_relative "../helpers/display_helper"
-require "pry"
+require_relative "base_commands"
+
 module TagCommands
-  include DisplayHelper
+  include BaseCommands
 
   def view_tags
     display_card_tags(@card)
@@ -21,20 +21,22 @@ module TagCommands
 
   def update_tag
     @action = "Update"
-    update_selected_tag if load_and_display_tag_choices
+    @tag = load_and_display_choices("tag", :tags, @action)
+    update_selected_tag if @tag
     manage_selected_card
   end
 
   def delete_tag
     @action = "Delete"
-    delete_selected_tag if load_and_display_tag_choices
+    @tag = load_and_display_choices("tag", :tags, @action)
+    delete_selected_tag if @tag
     manage_selected_card
   end
 
   private
 
   def choose_tags_from_options
-    all_tags = load_tags
+    all_tags = load_resources("tags", :tags)
     return if all_tags.empty?
 
     current_tag_names = @card["tags"].map { |tag| tag["name"] }
@@ -63,50 +65,31 @@ module TagCommands
 
   def remove_tags_from_card(tags_to_remove)
     tags_to_remove.each do |tag|
-      @api_client.remove_card_tag(card_id: @card["id"].to_i, tag_id: tag)
+      result = @api_client.remove_card_tag(card_id: @card["id"].to_i, tag_id: tag)
+      handle_tag_operation_result(result, "remove", tag)
     end
   end
 
   def add_tags_to_card(tags_to_add)
     tags_to_add.each do |tag|
-      @api_client.add_card_tag(card_id: @card["id"].to_i, tag_id: tag)
+      result = @api_client.add_card_tag(card_id: @card["id"].to_i, tag_id: tag)
+      handle_tag_operation_result(result, "add", tag)
     end
   end
 
-  def load_and_display_tag_choices
-    results = load_tags
-    display_tag_choices(results) unless results.empty?
-  end
-
-  def display_tag_choices(tags)
-    tag_choices = tags.map { |tag| { name: tag["name"], value: tag["id"] } }
-    tag_choices << { name: "Back", value: :go_back }
-    choice = @prompt.select("=== Select a Tag to #{@action} ===",
-                            tag_choices, cycle: true)
-    return false if choice == :go_back
-
-    @tag = tags.find { |tag| tag["id"] == choice }
-  end
-
-  def load_tags
-    puts "📚 Loading all tags..."
-    result = @api_client.get_tags
-
-    if result_has_error?(result)
-      handle_error(result)
-      return []
+  def handle_tag_operation_result(result, operation, tag_id)
+    if result.key?("error")
+      @prompt.error("Failed to #{operation} tag #{tag_id}: #{result['error']}")
+    else
+      puts "#{operation == 'add' ? '+' : 'X'} #{operation.capitalize} tag ID #{tag_id}"
     end
-
-    show_no_tags_message if result.empty?
-
-    result
   end
 
   def create_new_tag
     puts "\n=== Creating New Tag... ==="
     name = prompt_user_for_required_string(string_name: "name", titleize: true)
     if tag_name_already_exists?(name)
-      puts "Tag with name #{name} already exits."
+      @prompt.error("Tag with name #{name} already exists.")
       return
     end
 
@@ -132,13 +115,7 @@ module TagCommands
   end
 
   def delete_selected_tag
-    return unless @prompt.yes?("Would you like to delete tag #{@tag['name']}?") do |q|
-      q.default true
-      q.required true
-    end
-
-    result = @api_client.delete_tag(@tag["id"])
-    handle_tag_result(result)
+    delete_resource("tag", :delete_tag, @tag["id"], @tag["name"])
   end
 
   def handle_tag_result(result)

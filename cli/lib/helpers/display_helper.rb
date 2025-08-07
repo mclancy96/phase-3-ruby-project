@@ -11,16 +11,25 @@ module DisplayHelper
 
   def display_card_preview(card, pause: false)
     print_flash_card_side(card, "front")
-    @prompt.keypress("Press space or enter to continue", keys: %i[space return]) if pause
+    if pause
+      with_interrupt_handling do
+        @prompt.keypress("Press space or enter to continue", keys: %i[space return])
+      end
+    end
     print_flash_card_side(card, "back")
   end
 
   def prompt_user_for_required_string(string_name:, value: "", titleize: false)
-    result = @prompt.ask("Enter #{string_name}:") do |q|
-      q.modify :strip
-      q.required true
-      q.value value
+    result = with_interrupt_handling do
+      @prompt.ask("Enter #{string_name}:") do |q|
+        q.modify :strip
+        q.required true
+        q.value value
+      end
     end
+
+    return false if result == false
+
     titleize ? result.split.map(&:capitalize).join(" ") : result
   end
 
