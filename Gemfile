@@ -50,6 +50,8 @@ gem "rest-client"
 # https://github.com/piotrmurach/tty-prompt
 gem "tty-prompt"
 
+gem "tty-spinner"
+
 # These gems will only be used when we are running the application locally
 group :development do
   gem "pry"
