@@ -85,13 +85,7 @@ module BaseCommands
   def build_create_params(fields)
     params = {}
     fields.each do |field, options|
-      options ||= {}
-      value = options[:value] || prompt_user_for_required_string(
-        string_name: field.to_s,
-        titleize: options[:titleize] || false
-      )
-
-      # If user interrupted input, return nil to cancel operation
+      value = get_field_value_for_create(field, options)
       return nil if value == false
 
       params[field] = value
@@ -112,14 +106,7 @@ module BaseCommands
   def build_update_params(fields, current_resource)
     params = {}
     fields.each do |field, options|
-      options ||= {}
-      value = options[:value] || prompt_user_for_required_string(
-        string_name: field.to_s,
-        value: current_resource[field.to_s],
-        titleize: options[:titleize] || false
-      )
-
-      # If user interrupted input, return nil to cancel operation
+      value = get_field_value_for_update(field, options, current_resource)
       return nil if value == false
 
       params[field] = value
@@ -169,6 +156,23 @@ module BaseCommands
     instance_variable_get("@#{resource_type}")
   end
 
+  def get_field_value_for_create(field, options)
+    options ||= {}
+    options[:value] || prompt_user_for_required_string(
+      string_name: field.to_s,
+      titleize: options[:titleize] || false
+    )
+  end
+
+  def get_field_value_for_update(field, options, current_resource)
+    options ||= {}
+    options[:value] || prompt_user_for_required_string(
+      string_name: field.to_s,
+      value: current_resource[field.to_s],
+      titleize: options[:titleize] || false
+    )
+  end
+
   def refresh_resource_data(resource_type, api_method, resource_id)
     updated_resource = @api_client.send(api_method, resource_id)
 
@@ -181,5 +185,22 @@ module BaseCommands
                                                                 end}")
       nil
     end
+  end
+
+  def create_menu_options_with_conditional_disable(base_options, condition, disabled_message,
+                                                   always_enabled = [])
+    options = base_options.dup
+
+    unless condition
+      options.each do |option|
+        option[:disabled] = disabled_message unless always_enabled.include?(option[:value])
+      end
+    end
+
+    options
+  end
+
+  def add_back_option(options, back_text = "⬅ Go back")
+    options << { name: back_text, value: :go_back }
   end
 end

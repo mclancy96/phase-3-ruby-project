@@ -5,15 +5,6 @@ module CardCommands
   include BaseCommands
   include TagCommands
 
-  CARD_MENU_OPTIONS = [
-    { name: "View tags for this card", value: :view_tags },
-    { name: "Add/Remove tags to/from this card", value: :select_tags },
-    { name: "Create a new tag", value: :create_tag },
-    { name: "Change the name of an existing tag", value: :update_tag },
-    { name: "Delete a tag", value: :delete_tag },
-    { name: "Go back to card management menu", value: :go_back },
-  ].freeze
-
   def view_cards
     results = load_resources("cards for #{@deck['name']}", :get_cards_by_deck, @deck["id"])
     display_cards_details(results) unless results.empty?
@@ -75,7 +66,7 @@ module CardCommands
   end
 
   def display_cards_details(cards)
-    puts "\n=== Cards in #{@deck['name']}==="
+    puts "\n=== Deck #{@deck['name']} > Cards in #{@deck['name']}==="
     cards.each_with_index { |card, index| display_single_card(card, index) }
   end
 
@@ -103,10 +94,34 @@ module CardCommands
     return unless @card
 
     refresh_card_data
-    choice = @prompt.select("=== Select Tag Management Option for #{@card['front']} ===",
-                            CARD_MENU_OPTIONS, cycle: true)
+    # Check if there are any tags available
+    tags = @api_client.tags
+    has_tags = tags.is_a?(Array) && !tags.empty?
+
+    choice = @prompt.select("=== Deck #{@deck['name']} > Card > Select Tag Management Option for #{@card['front']} ===",
+                            card_menu_options(has_tags), cycle: true)
 
     send(choice) unless choice == :go_back
+  end
+
+  def card_menu_options(has_tags = true)
+    options = create_menu_options_with_conditional_disable(
+      base_card_menu_options,
+      has_tags,
+      "(No tags available)",
+      [:create_tag]
+    )
+    add_back_option(options, "Go back to card management menu")
+  end
+
+  def base_card_menu_options
+    [
+      { name: "View tags for this card", value: :view_tags },
+      { name: "Add/Remove tags to/from this card", value: :select_tags },
+      { name: "Create a new tag", value: :create_tag },
+      { name: "Change the name of an existing tag", value: :update_tag },
+      { name: "Delete a tag", value: :delete_tag },
+    ]
   end
 
   def refresh_card_data

@@ -5,15 +5,6 @@ module DeckCommands
   include BaseCommands
   include CardCommands
 
-  DECK_MENU_OPTIONS = [
-    { name: "View cards in this deck", value: :view_cards },
-    { name: "Manage cards for this deck", value: :manage_card },
-    { name: "Add a new card to this deck", value: :create_card },
-    { name: "Change a card's front or back", value: :update_card },
-    { name: "Delete a card", value: :delete_card },
-    { name: "⬅ Go back to main menu", value: :go_back },
-  ].freeze
-
   def view_decks
     results = load_resources("decks", :decks)
     display_decks_details(results) unless results.empty?
@@ -55,6 +46,26 @@ module DeckCommands
 
   private
 
+  def deck_menu_options(has_cards = true)
+    options = create_menu_options_with_conditional_disable(
+      base_deck_menu_options,
+      has_cards,
+      "(No cards in this deck)",
+      [:create_card]
+    )
+    add_back_option(options, "⬅ Go back to main menu")
+  end
+
+  def base_deck_menu_options
+    [
+      { name: "View cards in this deck", value: :view_cards },
+      { name: "Manage a card's tags", value: :manage_card },
+      { name: "Add a new card to this deck", value: :create_card },
+      { name: "Change a card's front or back", value: :update_card },
+      { name: "Delete a card", value: :delete_card },
+    ]
+  end
+
   def display_decks_details(decks)
     puts "\n=== Your Decks ==="
     decks.each_with_index { |deck, index| display_single_deck(deck, index) }
@@ -80,8 +91,11 @@ module DeckCommands
   def manage_selected_deck
     return unless @deck
 
-    choice = @prompt.select("=== Select Card Management Option for #{@deck['name']} ===",
-                            DECK_MENU_OPTIONS, cycle: true)
+    # Check if the selected deck has any cards
+    has_cards = @deck["cards"]&.any? || false
+
+    choice = @prompt.select("=== Deck > Select Card Management Option for #{@deck['name']} ===",
+                            deck_menu_options(has_cards), cycle: true)
 
     send(choice) unless choice == :go_back
   end

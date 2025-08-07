@@ -86,7 +86,7 @@ module TagCommands
   end
 
   def create_new_tag
-    puts "\n=== Creating New Tag... ==="
+    puts "\n=== Deck #{@deck['name']} > Card #{@card['front']} > Creating New Tag... ==="
     name = prompt_user_for_required_string(string_name: "name", titleize: true)
     if tag_name_already_exists?(name)
       @prompt.error("Tag with name #{name} already exists.")
@@ -102,7 +102,7 @@ module TagCommands
   end
 
   def update_selected_tag
-    puts "\n=== Update #{@tag['name']}... ==="
+    puts "\n=== Deck #{@deck['name']} > Card #{@card['front']} > Update #{@tag['name']}... ==="
     name = prompt_user_for_required_string(string_name: "name", value: @tag["name"],
                                            titleize: true)
     if tag_name_already_exists?(name)
