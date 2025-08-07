@@ -13,13 +13,6 @@ class APIClient
     make_request(:get, "/decks")
   end
 
-  def get_deck(id)
-    response = make_request(:get, "/decks/#{id}")
-    return response if response.key?("error")
-
-    Deck.new(response)
-  end
-
   def create_deck(name:, description:)
     make_request(:post, "/decks", { name: name, description: description })
   end
@@ -64,10 +57,6 @@ class APIClient
     make_request(:get, "/decks/#{deck_id}/cards")
   end
 
-  def get_tags_by_card(card_id)
-    make_request(:get, "/cards/#{card_id}/tags")
-  end
-
   # Tag API methods
   def get_tags
     make_request(:get, "/tags")
@@ -77,10 +66,6 @@ class APIClient
     require "uri"
     encoded_name = URI.encode_www_form_component(name)
     make_request(:get, "/tags?name=#{encoded_name}")
-  end
-
-  def get_tag(id)
-    make_request(:get, "/tags/#{id}")
   end
 
   def create_tag(name:)
@@ -93,10 +78,6 @@ class APIClient
 
   def delete_tag(id)
     make_request(:delete, "/tags/#{id}")
-  end
-
-  def get_cards_by_tag(tag_id)
-    make_request(:get, "/tags/#{tag_id}/cards")
   end
 
   # CardTag API methods

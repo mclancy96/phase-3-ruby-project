@@ -45,7 +45,7 @@ module TagCommands
   def multi_select_prompt_with_tags(all_tags, current_tag_names)
     @prompt.multi_select("Select tags for '#{@card['front']}':",
                          help: "\nPress spacebar to select options and enter to confirm",
-                         show_help: :always) do |menu|
+                         show_help: :always, cycle: true) do |menu|
       menu.default(*current_tag_names) unless current_tag_names.empty?
       all_tags.each do |tag|
         menu.choice tag["name"], tag["id"]
