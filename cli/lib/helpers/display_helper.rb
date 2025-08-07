@@ -2,7 +2,7 @@ module DisplayHelper
   def display_welcome
     puts brain
     puts big_brain_time
-    puts "Welcome to Flash Card Manager CLI!"
+    puts "Welcome to Flash Card Manager CLI, #{ENV['USER'].split('.').map(&:capitalize).join(' ')}!"
     puts "This app helps you manage your flash cards to maximize your learning."
     puts "This application connects to your Sinatra API."
     puts "Make sure your API server is running on http://localhost:9292"
