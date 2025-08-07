@@ -12,7 +12,7 @@ class CLIInterface
     { name: "Create a new deck", value: :create_deck },
     { name: "Change a deck's name or description", value: :update_deck },
     { name: "Delete a deck", value: :delete_deck },
-    { name: "Exit", value: :exit },
+    { name: "✌️ Exit", value: :exit },
   ].freeze
 
   def initialize

@@ -11,7 +11,7 @@ module DeckCommands
     { name: "Add a new card to this deck", value: :create_card },
     { name: "Change a card's front or back", value: :update_card },
     { name: "Delete a card", value: :delete_card },
-    { name: "Go back to main menu", value: :go_back },
+    { name: "⬅ Go back to main menu", value: :go_back },
   ].freeze
 
   def view_decks
