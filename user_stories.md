@@ -30,8 +30,6 @@
   As a learner, I want to create tags, so that I can label cards with topics or themes.
 - **Tag a Card**
   As a learner, I want to add one or more tags to a card, so that I can organize them by subject.
-- **View Cards by Tag**
-  As a learner, I want to view all cards with a specific tag, so that I can study a specific topic across multiple decks.
 
 ---
 
