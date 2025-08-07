@@ -1,84 +1,72 @@
+require_relative "base_commands"
 require_relative "tag_commands"
-require_relative "../helpers/display_helper"
-require "pry"
 
 module CardCommands
+  include BaseCommands
   include TagCommands
-  include DisplayHelper
-
-  CARD_MENU_OPTIONS = [
-    { name: "View tags for this card", value: :view_tags },
-    { name: "Add/Remove tags to/from this card", value: :select_tags },
-    { name: "Create a new tag", value: :create_tag },
-    { name: "Change the name of an existing tag", value: :update_tag },
-    { name: "Delete a tag", value: :delete_tag },
-    { name: "Go back to card management menu", value: :go_back },
-  ].freeze
 
   def view_cards
-    results = load_cards
+    results = load_resources("cards for #{@deck['name']}", :get_cards_by_deck, @deck["id"])
     display_cards_details(results) unless results.empty?
     manage_selected_deck
   end
 
   def manage_card
-    manage_selected_card if load_and_display_card_choices
+    @card = load_and_display_choices("card", :get_cards_by_deck, "Manage",
+                                     { name_field: "front", id_field: "id",
+                                       api_args: [@deck["id"]], })
+    manage_selected_card if @card
     manage_selected_deck
   end
 
   def create_card
     @action = "Create"
-    create_new_card
-    manage_selected_card
+    create_resource("card", :create_card, {
+                      front: { titleize: true },
+                      back: {},
+                      deck_id: { value: @deck["id"] },
+                    })
+    refresh_deck_data if @card
+    manage_selected_card if @card
     manage_selected_deck
   end
 
   def update_card
     @action = "Update"
-    update_selected_card if load_and_display_card_choices
+    @card = select_card_for_action(@action)
+    perform_card_update if @card
+    refresh_deck_data if @card
     manage_selected_deck
   end
 
   def delete_card
     @action = "Delete"
-    delete_selected_card if load_and_display_card_choices
+    @card = select_card_for_action(@action)
+    if @card
+      delete_resource("card", :delete_card, @card["id"], @card["front"])
+      refresh_deck_data unless @card
+    end
     manage_selected_deck
   end
 
   private
 
-  def load_and_display_card_choices
-    results = load_cards
-    display_card_choices(results) unless results.empty?
+  def select_card_for_action(action)
+    load_and_display_choices("card", :get_cards_by_deck, action,
+                             { name_field: "front", id_field: "id",
+                               api_args: [@deck["id"]], })
   end
 
-  def display_card_choices(cards)
-    card_choices = cards.map { |card| { name: card["front"], value: card["id"] } }
-    card_choices << { name: "Back", value: :go_back }
-    choice = @prompt.select("=== Select a Card to #{@action} ===",
-                            card_choices, cycle: true)
-
-    return false if choice == :go_back
-
-    @card = cards.find { |card| card["id"] == choice }
-  end
-
-  def load_cards
-    puts "📚 Loading cards for #{@deck['name']}..."
-    result = @api_client.get_cards_by_deck(@deck["id"])
-
-    if result_has_error?(result)
-      handle_error(result)
-      return []
-    end
-
-    show_no_cards_message if result.empty?
-
-    result
+  def perform_card_update
+    update_resource("card", :update_card, @card["id"], {
+                      front: { titleize: true },
+                      back: {},
+                      deck_id: { value: @card["deck_id"] },
+                    }, @card)
   end
 
   def display_cards_details(cards)
-    puts "\n=== Cards in #{@deck['name']}==="
+    puts "\n=== Deck #{@deck['name']} > Cards in #{@deck['name']}==="
     cards.each_with_index { |card, index| display_single_card(card, index) }
   end
 
@@ -102,78 +90,50 @@ module CardCommands
     end
   end
 
-  def show_current_card_values(card)
-    puts "\nCurrent values:"
-    puts "Front: #{card['front']}"
-    puts "Back: #{card['back']}"
-  end
-
   def manage_selected_card
     return unless @card
 
     refresh_card_data
-    choice = @prompt.select("=== Select Tag Management Option for #{@card['front']} ===",
-                            CARD_MENU_OPTIONS, cycle: true)
+    # Check if there are any tags available
+    tags = @api_client.tags
+    has_tags = tags.is_a?(Array) && !tags.empty?
+
+    choice = @prompt.select("=== Deck #{@deck['name']} > Card > Select Tag Management Option for #{@card['front']} ===",
+                            card_menu_options(has_tags), cycle: true)
 
     send(choice) unless choice == :go_back
   end
 
-  def show_no_cards_message
-    @prompt.warn("📭 No cards found. Create your first card!")
-    []
+  def card_menu_options(has_tags = true)
+    options = create_menu_options_with_conditional_disable(
+      base_card_menu_options,
+      has_tags,
+      "(No tags available)",
+      [:create_tag]
+    )
+    add_back_option(options, "Go back to card management menu")
   end
 
-  def no_cards_available?(cards_result)
-    cards_result.key?("error") || cards_result.empty?
-  end
-
-  def create_new_card
-    puts "\n=== Creating New Card... ==="
-    front = prompt_user_for_required_string(string_name: "front", titleize: true)
-    back = prompt_user_for_required_string(string_name: "back")
-    result = @api_client.create_card(front: front, back: back, deck_id: @deck["id"])
-    handle_card_result(result)
-  end
-
-  def update_selected_card
-    puts "\n=== Update #{@card['front']}... ==="
-    front = prompt_user_for_required_string(string_name: "front", value: @card["front"],
-                                            titleize: true)
-    back = prompt_user_for_required_string(string_name: "back",
-                                           value: @card["back"])
-    result = @api_client.update_card(@card["id"], front: front, back: back,
-                                                  deck_id: @card["deck_id"])
-    handle_card_result(result)
-  end
-
-  def delete_selected_card
-    return unless @prompt.yes?("Would you like to delete card #{@card['front']}?") do |q|
-      q.default true
-      q.required true
-    end
-
-    result = @api_client.delete_card(@card["id"])
-    handle_card_result(result)
+  def base_card_menu_options
+    [
+      { name: "View tags for this card", value: :view_tags },
+      { name: "Add/Remove tags to/from this card", value: :select_tags },
+      { name: "Create a new tag", value: :create_tag },
+      { name: "Change the name of an existing tag", value: :update_tag },
+      { name: "Delete a tag", value: :delete_tag },
+    ]
   end
 
   def refresh_card_data
-    updated_card = @api_client.get_card(@card["id"])
-    if updated_card && !updated_card.key?("error")
-      @card = updated_card
-    else
-      @prompt.error("⚠️ Failed to refresh card data: #{updated_card['error'] if updated_card}")
-    end
+    refresh_resource_data("card", :get_card, @card["id"])
   end
 
-  def handle_card_result(result)
-    if result.key?("error")
-      @prompt.error("Failed to #{@action} card: #{result['error']}")
-    elsif @action == "Delete"
-      @prompt.ok("Card deleted successfully!")
-      @card = nil
-    else
-      @prompt.ok("#{result['front']} #{@action}d successfully!")
-      @card = result
-    end
+  def refresh_deck_data
+    decks = @api_client.decks
+    return unless decks.is_a?(Array) && !decks.empty?
+
+    updated_deck = decks.find { |deck| deck["id"] == @deck["id"] }
+    @deck = updated_deck if updated_deck
+
   end
 end

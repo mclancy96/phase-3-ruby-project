@@ -2,16 +2,8 @@
 
 class DecksController < ApplicationController
   get "/decks" do
-    decks = Deck.all
+    decks = Deck.order(front: :asc)
     decks.to_json(include: :cards)
-  end
-
-  get "/decks/:id" do
-    deck = Deck.find(params[:id])
-    deck.to_json(include: :cards)
-  rescue ActiveRecord::RecordNotFound
-    status 404
-    { error: "Deck not found" }.to_json
   end
 
   post "/decks" do

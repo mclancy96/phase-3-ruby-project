@@ -8,16 +8,8 @@ class APIClient
     @base_url = base_url
   end
 
-  # Deck API methods
-  def get_decks
+  def decks
     make_request(:get, "/decks")
-  end
-
-  def get_deck(id)
-    response = make_request(:get, "/decks/#{id}")
-    return response if response.key?("error")
-
-    Deck.new(response)
   end
 
   def create_deck(name:, description:)
@@ -35,8 +27,7 @@ class APIClient
     make_request(:delete, "/decks/#{id}")
   end
 
-  # Card API methods
-  def get_cards
+  def cards
     make_request(:get, "/cards")
   end
 
@@ -64,12 +55,7 @@ class APIClient
     make_request(:get, "/decks/#{deck_id}/cards")
   end
 
-  def get_tags_by_card(card_id)
-    make_request(:get, "/cards/#{card_id}/tags")
-  end
-
-  # Tag API methods
-  def get_tags
+  def tags
     make_request(:get, "/tags")
   end
 
@@ -77,10 +63,6 @@ class APIClient
     require "uri"
     encoded_name = URI.encode_www_form_component(name)
     make_request(:get, "/tags?name=#{encoded_name}")
-  end
-
-  def get_tag(id)
-    make_request(:get, "/tags/#{id}")
   end
 
   def create_tag(name:)
@@ -95,11 +77,6 @@ class APIClient
     make_request(:delete, "/tags/#{id}")
   end
 
-  def get_cards_by_tag(tag_id)
-    make_request(:get, "/tags/#{tag_id}/cards")
-  end
-
-  # CardTag API methods
   def add_card_tag(card_id:, tag_id:)
     make_request(:post, "/card_tags", { card_id: card_id, tag_id: tag_id })
   end
@@ -112,29 +89,39 @@ class APIClient
 
   def make_request(method, endpoint, params = {})
     url = "#{@base_url}#{endpoint}"
-
-    case method
-    when :get
-      response = RestClient.get(url)
-    when :post
-      response = RestClient.post(url, params.to_json, content_type: :json)
-    when :patch
-      response = RestClient.patch(url, params.to_json, content_type: :json)
-    when :delete
-      if params.any?
-        query_string = params.map { |key, value| "#{key}=#{value}" }.join("&")
-        url = "#{url}?#{query_string}"
-      end
-      response = RestClient.delete(url)
-    end
-
-    return {} if response.body.nil? || response.body.strip.empty?
-
-    JSON.parse(response.body)
+    response = execute_request(method, url, params)
+    parse_response(response)
   rescue RestClient::Exception => e
     handle_api_error(e)
   rescue JSON::ParserError => e
     { "error" => "Invalid JSON response: #{e.message}" }
+  end
+
+  def execute_request(method, url, params)
+    case method
+    when :get
+      RestClient.get(url)
+    when :post
+      RestClient.post(url, params.to_json, content_type: :json)
+    when :patch
+      RestClient.patch(url, params.to_json, content_type: :json)
+    when :delete
+      execute_delete_request(url, params)
+    end
+  end
+
+  def execute_delete_request(url, params)
+    if params.any?
+      query_string = params.map { |key, value| "#{key}=#{value}" }.join("&")
+      url = "#{url}?#{query_string}"
+    end
+    RestClient.delete(url)
+  end
+
+  def parse_response(response)
+    return {} if response.body.nil? || response.body.strip.empty?
+
+    JSON.parse(response.body)
   end
 
   def handle_api_error(error)
@@ -142,15 +129,17 @@ class APIClient
     when 404
       { "error" => "Resource not found" }
     when 422
-      begin
-        JSON.parse(error.response.body)
-      rescue JSON::ParserError
-        { "error" => "Validation error" }
-      end
+      handle_validation_error(error)
     when 500
       { "error" => "Server error" }
     else
       { "error" => "API request failed: #{error.message}" }
     end
+  end
+
+  def handle_validation_error(error)
+    JSON.parse(error.response.body)
+  rescue JSON::ParserError
+    { "error" => "Validation error" }
   end
 end

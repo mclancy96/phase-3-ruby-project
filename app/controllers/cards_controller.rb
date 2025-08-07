@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 class CardsController < ApplicationController
   get "/cards/:id" do
     card = Card.find(params[:id])
@@ -47,15 +45,6 @@ class CardsController < ApplicationController
     card = Card.find(params[:id])
     card.destroy
     status 204
-  rescue ActiveRecord::RecordNotFound
-    status 404
-    { error: "Card not found" }.to_json
-  end
-
-  get "/cards/:id/tags" do
-    card = Card.find(params[:id])
-    cards = card.cards
-    cards.to_json(include: :card)
   rescue ActiveRecord::RecordNotFound
     status 404
     { error: "Card not found" }.to_json
