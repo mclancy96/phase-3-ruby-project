@@ -14,11 +14,11 @@ module DisplayHelper
     print_flash_card_side(card, "front")
     if pause
       prompt_and_flip(card, "Press space or enter to see back of card")
+      prompt_and_flip(card, "Press space or enter to continue to next card")
+      clear_screen
     else
       print_flash_card_side(card, "back")
     end
-    prompt_and_flip(card, "Press space or enter to continue to next card")
-    clear_screen
   end
 
   def prompt_and_flip(card, text)

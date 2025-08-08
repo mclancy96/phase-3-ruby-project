@@ -72,7 +72,7 @@ module CardCommands
 
   def display_single_card(card, index)
     puts "#{index + 1}. #{card['front']}"
-    display_card_preview(card)
+    display_card_preview(card, pause: false)
     display_card_tags(card)
   end
 
