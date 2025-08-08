@@ -23,7 +23,6 @@ class CLIInterface
 
   def main_loop
     loop do
-      # Check if there are any decks available
       decks = @api_client.decks
       has_decks = decks.is_a?(Array) && !decks.empty?
 
@@ -44,7 +43,6 @@ class CLIInterface
       "(No decks available)",
       [:create_deck]
     )
-    # Exit option should always be available
     options << { name: "✌️ Exit", value: :exit }
   end
 

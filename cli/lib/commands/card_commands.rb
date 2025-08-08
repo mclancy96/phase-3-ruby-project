@@ -94,7 +94,6 @@ module CardCommands
     return unless @card
 
     refresh_card_data
-    # Check if there are any tags available
     tags = @api_client.tags
     has_tags = tags.is_a?(Array) && !tags.empty?
 

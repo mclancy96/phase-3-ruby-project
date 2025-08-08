@@ -76,7 +76,7 @@ module BaseCommands
   def create_resource(resource_type, api_method, fields)
     puts "\n=== Creating New #{resource_type.capitalize}... ==="
     params = build_create_params(fields)
-    return if params.nil? # User cancelled operation
+    return if params.nil?
 
     result = @api_client.send(api_method, **params)
     handle_resource_result(result, resource_type, "Create")
@@ -97,7 +97,7 @@ module BaseCommands
     name_field = resource_type == "card" ? "front" : fields.keys.first.to_s
     puts "\n=== Update #{current_resource[name_field]}... ==="
     params = build_update_params(fields, current_resource)
-    return if params.nil? # User cancelled operation
+    return if params.nil?
 
     result = @api_client.send(api_method, resource_id, **params)
     handle_resource_result(result, resource_type, "Update")
