@@ -81,8 +81,8 @@ module DisplayHelper
   def print_tilting_frame(text)
     puts "      ┌─────────────────────────┐"
     puts "      │\\                       /│"
-    puts "      │ \\      #{text.slice(0, 10).center(10)}     / │"
-    puts "      │  \\     #{text.slice(11, 10).center(10)}    /  │"
+    puts "      │ \\      #{(text.slice(0, 10) || '').center(10)}     / │"
+    puts "      │  \\     #{(text.slice(11, 10) || '').center(10)}    /  │"
     puts "      └─────────────────────────┘"
   end
 
