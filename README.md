@@ -24,7 +24,7 @@ A simple command-line flashcard app for quickly creating, organizing, and review
 1. **Clone the repo**
 
    ```bash
-   git clone https://github.com/your-username/flashcard-cli.git
+   git clone git@github.com:mclancy96/phase-3-ruby-project.git
    cd flashcard-cli
    ```
 2. **Install dependencies**
